@@ -23,6 +23,10 @@ public class EmployeeController {
     public EmployeeResponseDTO addEmployee(@Valid @RequestBody EmployeeRequestDTO dto) {
         return service.saveEmployee(dto);
     }
+    @GetMapping
+    public List<Employee> getEmployees() {
+        return service.getAll();
+    }
 
     @GetMapping("/{id}")
     public Employee getEmployeeById(@PathVariable Long id) {
