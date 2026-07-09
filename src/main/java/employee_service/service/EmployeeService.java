@@ -1,6 +1,8 @@
 package employee_service.service;
 
 import employee_service.entity.Employee;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import employee_service.exception.EmployeeNotFoundException;
 import employee_service.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,12 @@ public class EmployeeService {
 
     public EmployeeService(EmployeeRepository repository) {
         this.repository = repository;
+    }
+    public Page<Employee> getEmployeesWithPagination(int page, int size) {
+        return repository.findAll(PageRequest.of(page, size));
+    }
+    public List<Employee> searchEmployees(String keyword) {
+        return repository.findByFirstNameContainingIgnoreCase(keyword);
     }
     public EmployeeResponseDTO saveEmployee(EmployeeRequestDTO dto) {
 

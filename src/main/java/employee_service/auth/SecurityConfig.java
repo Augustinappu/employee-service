@@ -1,6 +1,7 @@
 package employee_service.auth;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -33,14 +34,32 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/auth/register",
-                                "/auth/login",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
+                	    .requestMatchers(
+                	        "/auth/register",
+                	        "/auth/login",
+                	        "/auth/forgot-password",
+                	        "/auth/reset-password",
+                	        "/swagger-ui/**",
+                	        "/v3/api-docs/**"
+                	    ).permitAll()
+
+                	    .requestMatchers(HttpMethod.GET, "/employees", "/employees/**")
+                	    .hasAnyRole("ADMIN", "USER")
+                	    
+
+                	    .requestMatchers(HttpMethod.POST, "/employees/**")
+                	    .hasRole("ADMIN")
+
+                	    .requestMatchers(HttpMethod.PUT, "/employees/**")
+                	    .hasRole("ADMIN")
+
+                	    .requestMatchers(HttpMethod.DELETE, "/employees/**")
+                	    .hasRole("ADMIN")
+                	    .requestMatchers("/dashboard/**").hasRole("ADMIN")
+
+                	    .anyRequest().authenticated()
+                	)
+                
                 .addFilterBefore(
                         jwtFilter,
                         UsernamePasswordAuthenticationFilter.class

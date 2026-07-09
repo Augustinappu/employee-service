@@ -1,6 +1,7 @@
 package employee_service.controller;
 
 import employee_service.entity.Employee;
+import org.springframework.data.domain.Page;
 import employee_service.service.EmployeeService;
 import org.springframework.web.bind.annotation.*;
 import employee_service.dto.EmployeeRequestDTO;
@@ -31,6 +32,17 @@ public class EmployeeController {
     @GetMapping("/{id}")
     public Employee getEmployeeById(@PathVariable Long id) {
         return service.getById(id);
+    }
+    @GetMapping("/search")
+    public List<Employee> searchEmployees(@RequestParam String keyword) {
+        return service.searchEmployees(keyword);
+    }
+    @GetMapping("/paged")
+    public Page<Employee> getEmployeesWithPagination(
+            @RequestParam int page,
+            @RequestParam int size) {
+
+        return service.getEmployeesWithPagination(page, size);
     }
 
     @PutMapping("/{id}")
