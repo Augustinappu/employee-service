@@ -30,6 +30,48 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+                List.of(
+                        "http://localhost:3000",
+                        "http://localhost:3001",
+                        "https://hrms-frontend-delta-five.vercel.app"
+                )
+        );
+
+        configuration.setAllowedMethods(
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS"
+                )
+        );
+
+        configuration.setAllowedHeaders(List.of("*"));
+
+        configuration.setExposedHeaders(
+                List.of(
+                        "Authorization",
+                        "Content-Disposition"
+                )
+        );
+
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
@@ -48,53 +90,58 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Public authentication endpoints
-                		.requestMatchers(
-                		        "/auth/**",
-                		        "/swagger-ui/**",
-                		        "/swagger-ui.html",
-                		        "/v3/api-docs/**"
-                		).permitAll()
+                        .requestMatchers(
+                                "/auth/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
 
-                		.requestMatchers("/employees/export/**")
-                		.hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
 
-                		.requestMatchers("/dashboard/**")
-                		.hasRole("ADMIN")
+                        .requestMatchers(
+                                "/employees/export/**"
+                        ).hasRole("ADMIN")
 
-                		.requestMatchers(
-                		        HttpMethod.GET,
-                		        "/employees",
-                		        "/employees/**"
-                		).hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(
+                                "/dashboard/**"
+                        ).hasRole("ADMIN")
 
-                		.requestMatchers(
-                		        HttpMethod.POST,
-                		        "/employees",
-                		        "/employees/**"
-                		).hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/employees",
+                                "/employees/**"
+                        ).hasAnyRole("ADMIN", "USER")
 
-                		.requestMatchers(
-                		        HttpMethod.PUT,
-                		        "/employees",
-                		        "/employees/**"
-                		).hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/employees",
+                                "/employees/**"
+                        ).hasRole("ADMIN")
 
-                		.requestMatchers(
-                		        HttpMethod.DELETE,
-                		        "/employees",
-                		        "/employees/**"
-                		).hasRole("ADMIN")
-                		.requestMatchers("/api/attendance/**")
-                		.hasAnyRole("ADMIN", "USER")
-                		.requestMatchers("/api/payroll/**")
-                		.hasAnyRole("ADMIN", "USER")
-                		.requestMatchers("/api/performance/**")
-                		.hasAnyRole("ADMIN", "USER")
-                		.requestMatchers("/api/ai/**")
-                		.hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/employees",
+                                "/employees/**"
+                        ).hasRole("ADMIN")
 
-                		.anyRequest().authenticated()
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/employees",
+                                "/employees/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                "/api/attendance/**",
+                                "/api/payroll/**",
+                                "/api/performance/**",
+                                "/api/ai/**"
+                        ).hasAnyRole("ADMIN", "USER")
+
+                        .anyRequest().authenticated()
                 )
 
                 .addFilterBefore(
@@ -103,43 +150,5 @@ public class SecurityConfig {
                 );
 
         return http.build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOrigins(
-                List.of(
-                        "http://localhost:3000",
-                        "http://localhost:3001"
-                )
-        );
-
-        configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"
-                )
-        );
-
-        configuration.setAllowedHeaders(List.of("*"));
-
-        configuration.setExposedHeaders(
-                List.of("Authorization", "Content-Disposition")
-        );
-
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
     }
 }
