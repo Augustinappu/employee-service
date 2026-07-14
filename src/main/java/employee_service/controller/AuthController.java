@@ -1,39 +1,62 @@
 package employee_service.controller;
 
+import employee_service.dto.LoginRequest;
 import employee_service.dto.RegisterRequest;
 import employee_service.service.UserService;
 import employee_service.user.User;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import employee_service.dto.LoginRequest;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public AuthController(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping("/register")
-    public User register(@RequestBody RegisterRequest request) {
-        return userService.register(request);
+    public ResponseEntity<User> register(
+            @RequestBody RegisterRequest request) {
+
+        return ResponseEntity.ok(userService.register(request));
     }
 
     @PostMapping("/forgot-password")
-    public String forgotPassword(@RequestParam String email) {
-        return userService.forgotPassword(email);
+    public ResponseEntity<String> forgotPassword(
+            @RequestParam String email) {
+
+        return ResponseEntity.ok(
+                userService.forgotPassword(email)
+        );
     }
 
     @PostMapping("/reset-password")
-    public String resetPassword(
+    public ResponseEntity<String> resetPassword(
             @RequestParam String token,
             @RequestParam String newPassword) {
 
-        return userService.resetPassword(token, newPassword);
+        return ResponseEntity.ok(
+                userService.resetPassword(token, newPassword)
+        );
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
-        return userService.login(request);
+    public ResponseEntity<String> login(
+            @RequestBody LoginRequest request) {
+
+        return ResponseEntity.ok(userService.login(request));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleBadRequest(
+            IllegalArgumentException exception) {
+
+        return ResponseEntity
+                .badRequest()
+                .body(exception.getMessage());
     }
 }

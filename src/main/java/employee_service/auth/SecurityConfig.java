@@ -1,14 +1,19 @@
 package employee_service.auth;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
@@ -25,46 +30,116 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .cors(cors ->
+                        cors.configurationSource(corsConfigurationSource())
                 )
+
+                .csrf(csrf -> csrf.disable())
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+
                 .authorizeHttpRequests(auth -> auth
-                	    .requestMatchers(
-                	        "/auth/register",
-                	        "/auth/login",
-                	        "/auth/forgot-password",
-                	        "/auth/reset-password",
-                	        "/swagger-ui/**",
-                	        "/v3/api-docs/**"
-                	    ).permitAll()
 
-                	    .requestMatchers(HttpMethod.GET, "/employees", "/employees/**")
-                	    .hasAnyRole("ADMIN", "USER")
-                	    
+                        // Public authentication endpoints
+                		.requestMatchers(
+                		        "/auth/**",
+                		        "/swagger-ui/**",
+                		        "/swagger-ui.html",
+                		        "/v3/api-docs/**"
+                		).permitAll()
 
-                	    .requestMatchers(HttpMethod.POST, "/employees/**")
-                	    .hasRole("ADMIN")
+                		.requestMatchers("/employees/export/**")
+                		.hasRole("ADMIN")
 
-                	    .requestMatchers(HttpMethod.PUT, "/employees/**")
-                	    .hasRole("ADMIN")
+                		.requestMatchers("/dashboard/**")
+                		.hasRole("ADMIN")
 
-                	    .requestMatchers(HttpMethod.DELETE, "/employees/**")
-                	    .hasRole("ADMIN")
-                	    .requestMatchers("/dashboard/**").hasRole("ADMIN")
+                		.requestMatchers(
+                		        HttpMethod.GET,
+                		        "/employees",
+                		        "/employees/**"
+                		).hasAnyRole("ADMIN", "USER")
 
-                	    .anyRequest().authenticated()
-                	)
-                
+                		.requestMatchers(
+                		        HttpMethod.POST,
+                		        "/employees",
+                		        "/employees/**"
+                		).hasRole("ADMIN")
+
+                		.requestMatchers(
+                		        HttpMethod.PUT,
+                		        "/employees",
+                		        "/employees/**"
+                		).hasRole("ADMIN")
+
+                		.requestMatchers(
+                		        HttpMethod.DELETE,
+                		        "/employees",
+                		        "/employees/**"
+                		).hasRole("ADMIN")
+                		.requestMatchers("/api/attendance/**")
+                		.hasAnyRole("ADMIN", "USER")
+                		.requestMatchers("/api/payroll/**")
+                		.hasAnyRole("ADMIN", "USER")
+                		.requestMatchers("/api/performance/**")
+                		.hasAnyRole("ADMIN", "USER")
+                		.requestMatchers("/api/ai/**")
+                		.hasAnyRole("ADMIN", "USER")
+
+                		.anyRequest().authenticated()
+                )
+
                 .addFilterBefore(
                         jwtFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+                List.of(
+                        "http://localhost:3000",
+                        "http://localhost:3001"
+                )
+        );
+
+        configuration.setAllowedMethods(
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS"
+                )
+        );
+
+        configuration.setAllowedHeaders(List.of("*"));
+
+        configuration.setExposedHeaders(
+                List.of("Authorization", "Content-Disposition")
+        );
+
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }

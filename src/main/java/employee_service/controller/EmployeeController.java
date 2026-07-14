@@ -1,14 +1,22 @@
 package employee_service.controller;
 
-import employee_service.entity.Employee;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
-import employee_service.service.EmployeeService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import employee_service.dto.EmployeeRequestDTO;
 import employee_service.dto.EmployeeResponseDTO;
+import employee_service.service.EmployeeService;
 import jakarta.validation.Valid;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/employees")
@@ -21,38 +29,51 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public EmployeeResponseDTO addEmployee(@Valid @RequestBody EmployeeRequestDTO dto) {
+    public EmployeeResponseDTO addEmployee(
+            @Valid @RequestBody EmployeeRequestDTO dto) {
+
         return service.saveEmployee(dto);
     }
+
     @GetMapping
-    public List<Employee> getEmployees() {
+    public List<EmployeeResponseDTO> getEmployees() {
         return service.getAll();
     }
 
     @GetMapping("/{id}")
-    public Employee getEmployeeById(@PathVariable Long id) {
+    public EmployeeResponseDTO getEmployeeById(
+            @PathVariable Long id) {
+
         return service.getById(id);
     }
+
     @GetMapping("/search")
-    public List<Employee> searchEmployees(@RequestParam String keyword) {
+    public List<EmployeeResponseDTO> searchEmployees(
+            @RequestParam String keyword) {
+
         return service.searchEmployees(keyword);
     }
+
     @GetMapping("/paged")
-    public Page<Employee> getEmployeesWithPagination(
-            @RequestParam int page,
-            @RequestParam int size) {
+    public Page<EmployeeResponseDTO> getEmployeesWithPagination(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
 
         return service.getEmployeesWithPagination(page, size);
     }
 
     @PutMapping("/{id}")
-    public Employee updateEmployee(@PathVariable Long id,
-                                   @RequestBody Employee employee) {
-        return service.update(id, employee);
+    public EmployeeResponseDTO updateEmployee(
+            @PathVariable Long id,
+            @Valid @RequestBody EmployeeRequestDTO dto) {
+
+        return service.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
-    public String deleteEmployee(@PathVariable Long id) {
+    public String deleteEmployee(
+            @PathVariable Long id) {
+
         return service.delete(id);
     }
 }

@@ -1,15 +1,16 @@
 package employee_service.service;
 
-import employee_service.entity.Employee;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import employee_service.exception.EmployeeNotFoundException;
-import employee_service.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
+
 import employee_service.dto.EmployeeRequestDTO;
 import employee_service.dto.EmployeeResponseDTO;
-
-import java.util.List;
+import employee_service.entity.Employee;
+import employee_service.exception.EmployeeNotFoundException;
+import employee_service.repository.EmployeeRepository;
 
 @Service
 public class EmployeeService {
@@ -19,12 +20,7 @@ public class EmployeeService {
     public EmployeeService(EmployeeRepository repository) {
         this.repository = repository;
     }
-    public Page<Employee> getEmployeesWithPagination(int page, int size) {
-        return repository.findAll(PageRequest.of(page, size));
-    }
-    public List<Employee> searchEmployees(String keyword) {
-        return repository.findByFirstNameContainingIgnoreCase(keyword);
-    }
+
     public EmployeeResponseDTO saveEmployee(EmployeeRequestDTO dto) {
 
         Employee employee = new Employee();
@@ -37,48 +33,90 @@ public class EmployeeService {
 
         Employee savedEmployee = repository.save(employee);
 
-        EmployeeResponseDTO response = new EmployeeResponseDTO();
-
-        response.setId(savedEmployee.getId());
-        response.setFirstName(savedEmployee.getFirstName());
-        response.setLastName(savedEmployee.getLastName());
-        response.setEmail(savedEmployee.getEmail());
-        response.setDepartment(savedEmployee.getDepartment());
-        response.setSalary(savedEmployee.getSalary());
-
-        return response;
+        return convertToDTO(savedEmployee);
     }
 
-    public Employee save(Employee employee) {
-        return repository.save(employee);
+    public List<EmployeeResponseDTO> getAll() {
+
+        return repository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
     }
 
-    public List<Employee> getAll() {
-        return repository.findAll();
+    public EmployeeResponseDTO getById(Long id) {
+
+        Employee employee = repository.findById(id)
+                .orElseThrow(() ->
+                        new EmployeeNotFoundException(
+                                "Employee not found with id: " + id));
+
+        return convertToDTO(employee);
     }
-    public Employee getById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with id: " + id));
+
+    public List<EmployeeResponseDTO> searchEmployees(String keyword) {
+
+        return repository
+                .findByFirstNameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrDepartmentContainingIgnoreCase(
+                        keyword,
+                        keyword,
+                        keyword
+                )
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+    public Page<EmployeeResponseDTO> getEmployeesWithPagination(
+            int page,
+            int size) {
+
+        return repository.findAll(PageRequest.of(page, size))
+                .map(this::convertToDTO);
     }
 
-        public Employee update(Long id, Employee newEmployee) {
-        	Employee employee = repository.findById(id)
-        	        .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with id: " + id));
+    public EmployeeResponseDTO update(
+            Long id,
+            EmployeeRequestDTO dto) {
 
-          
-                employee.setFirstName(newEmployee.getFirstName());
-                employee.setLastName(newEmployee.getLastName());
-                employee.setEmail(newEmployee.getEmail());
-                employee.setDepartment(newEmployee.getDepartment());
-                employee.setSalary(newEmployee.getSalary());
-                return repository.save(employee);
-            }
+        Employee employee = repository.findById(id)
+                .orElseThrow(() ->
+                        new EmployeeNotFoundException(
+                                "Employee not found with id: " + id));
 
+        employee.setFirstName(dto.getFirstName());
+        employee.setLastName(dto.getLastName());
+        employee.setEmail(dto.getEmail());
+        employee.setDepartment(dto.getDepartment());
+        employee.setSalary(dto.getSalary());
 
-        public String delete(Long id) {
-            repository.deleteById(id);
-            return "Employee deleted successfully";
-        }
-        
-    
+        Employee updatedEmployee = repository.save(employee);
+
+        return convertToDTO(updatedEmployee);
+    }
+
+    public String delete(Long id) {
+
+        Employee employee = repository.findById(id)
+                .orElseThrow(() ->
+                        new EmployeeNotFoundException(
+                                "Employee not found with id: " + id));
+
+        repository.delete(employee);
+
+        return "Employee deleted successfully";
+    }
+
+    private EmployeeResponseDTO convertToDTO(Employee employee) {
+
+        EmployeeResponseDTO dto = new EmployeeResponseDTO();
+
+        dto.setId(employee.getId());
+        dto.setFirstName(employee.getFirstName());
+        dto.setLastName(employee.getLastName());
+        dto.setEmail(employee.getEmail());
+        dto.setDepartment(employee.getDepartment());
+        dto.setSalary(employee.getSalary());
+
+        return dto;
+    }
 }

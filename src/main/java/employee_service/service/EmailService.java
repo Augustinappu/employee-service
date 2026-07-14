@@ -1,6 +1,6 @@
 package employee_service.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -8,24 +8,41 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
-    public void sendOtpEmail(String toEmail, String otp) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Forgot Password OTP");
-        message.setText("Your OTP for password reset is: " + otp);
+    @Value("${spring.mail.username}")
+    private String senderEmail;
 
-        mailSender.send(message);
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
+    public EmailService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
     }
-    public void sendResetTokenEmail(String toEmail, String token) {
-        SimpleMailMessage message = new SimpleMailMessage();
 
-        message.setFrom("augustinappu22@gmail.com");
-        message.setTo(toEmail);
-        message.setSubject("Password Reset Token");
-        message.setText("Use this token to reset your password:\n\n" + token);
+    public void sendResetTokenEmail(
+            String recipientEmail,
+            String token) {
+
+        String resetLink =
+                frontendUrl
+                        + "/reset-password?token="
+                        + token;
+
+        SimpleMailMessage message =
+                new SimpleMailMessage();
+
+        message.setFrom(senderEmail);
+        message.setTo(recipientEmail);
+        message.setSubject("HRMS Password Reset");
+
+        message.setText(
+                "Hello,\n\n"
+                        + "Click the link below to reset your password:\n\n"
+                        + resetLink
+                        + "\n\nThis link expires in 15 minutes."
+                        + "\n\nIf you did not request this, ignore this email."
+        );
 
         mailSender.send(message);
     }
