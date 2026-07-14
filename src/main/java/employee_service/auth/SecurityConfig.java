@@ -106,9 +106,8 @@ public class SecurityConfig {
                                 "/employees/export/**"
                         ).hasRole("ADMIN")
 
-                        .requestMatchers(
-                                "/dashboard/**"
-                        ).hasRole("ADMIN")
+                        .requestMatchers("/dashboard/**")
+                        .hasAnyRole("ADMIN", "USER")
 
                         .requestMatchers(
                                 HttpMethod.GET,
